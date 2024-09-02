@@ -6,3 +6,4 @@ Thread pool experiments.
 	- main2: rendezvous point task queue
 	- main3: qlocked task queue
 	- main4: channel-based memimage line raster task
+	- main5: channel-based memimage block raster task
