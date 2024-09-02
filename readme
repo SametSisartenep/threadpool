@@ -1,0 +1,8 @@
+threadpool
+
+Thread pool experiments.
+
+	- main1: channel-based task queue
+	- main2: rendezvous point task queue
+	- main3: qlocked task queue
+	- main4: channel-based memimage line raster task
