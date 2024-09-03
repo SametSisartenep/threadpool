@@ -6,5 +6,7 @@ TARG=main1\
 	main3\
 	main4\
 	main5\
+	main6\
+	main7\
 
 </sys/src/cmd/mkmany

@@ -7,3 +7,5 @@ Thread pool experiments.
 	- main3: qlocked task queue
 	- main4: channel-based memimage line raster task
 	- main5: channel-based memimage block raster task
+	- main6: main4 with counted task execution
+	- main7: main5 with counted task execution
