@@ -1,0 +1,28 @@
+#!/bin/rc
+# written by sirjofri, with slight modifications.
+rfork en
+
+fn usage {
+	echo usage: $0 prog [args] >[1=2]
+	exit usage
+}
+
+if(~ $#* 0)
+	usage
+
+ramfs
+cp $1 /tmp
+cd /tmp
+
+$* >/dev/null >[2=1]
+
+{
+	for(f in prof.*){
+#		flambe $1 $f
+		prof $1 $f | grep fillpix
+	}
+} | awk '{ sum += $2; count++; print }
+END{
+	printf "sum: %.9f\n", sum;
+	printf "avg: %.9f\n", sum / count;
+}'
