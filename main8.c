@@ -16,11 +16,7 @@ struct Ttask
 struct Tpool
 {
 	ulong nprocs;
-	Ref issued;
-	Ref complete;
-
 	Channel *subq;	/* task submission queue */
-	Channel *done;	/* task completion signal */
 };
 
 void
@@ -31,12 +27,8 @@ threadloop(void *arg)
 
 	pool = arg;
 
-	while((task = recvp(pool->subq)) != nil){
-//		prof(task->fn, task->arg, 256, Proftime);
+	while((task = recvp(pool->subq)) != nil)
 		task->fn(task->arg);
-		incref(&pool->complete);
-		nbsend(pool->done, nil);
-	}
 }
 
 Tpool *
@@ -48,7 +40,6 @@ mkthreadpool(ulong nprocs)
 	memset(tp, 0, sizeof *tp);
 	tp->nprocs = nprocs;
 	tp->subq = chancreate(sizeof(void*), nprocs);
-	tp->done = chancreate(sizeof(void*), 0);
 	while(nprocs--)
 		proccreate(threadloop, tp, mainstacksize);
 	return tp;
@@ -64,7 +55,6 @@ threadpoolexec(Tpool *tp, void (*fn)(void*), void *arg)
 	t->arg = arg;
 
 	sendp(tp->subq, t);
-	incref(&tp->issued);
 }
 
 typedef struct Targs Targs;
@@ -73,6 +63,7 @@ struct Targs
 	Memimage *i;
 	ulong off;
 	ulong len;
+	Channel *done;	/* task completion signal */
 };
 void
 fillpix(void *arg)
@@ -94,6 +85,7 @@ fillpix(void *arg)
 		pix = α*25523UL*25523UL/* + truerand()*/;
 		*fbb++ = pix|0xFF<<24;
 	}
+	nbsend(imgop->done, nil);
 }
 
 void
@@ -138,12 +130,17 @@ threadmain(int argc, char *argv[])
 
 		while(cnt--)
 		for(i = 0; i < nprocs; i++){
-			t[i] = (Targs){img, i*stride, i == nprocs-1? W*H-i*stride: stride};
+			t[i] = (Targs){
+				img,
+				i*stride,
+				i == nprocs-1? W*H-i*stride: stride,
+				chancreate(sizeof(void*), 1)
+			};
 			threadpoolexec(pool, fillpix, &t[i]);
 		}
 
-		while(pool->issued.ref != pool->complete.ref)
-			recvp(pool->done);
+		for(i = 0; i < nprocs; i++)
+			recvp(t[i].done);
 
 		writememimage(1, img);
 
@@ -152,7 +149,12 @@ threadmain(int argc, char *argv[])
 
 	while(cnt--)
 	for(i = 0; i < nprocs; i++){
-		t[i] = (Targs){img, i*stride, i == nprocs-1? W*H-i*stride: stride};
+		t[i] = (Targs){
+			img,
+			i*stride,
+			i == nprocs-1? W*H-i*stride: stride,
+			chancreate(sizeof(void*), 1)
+		};
 		fillpix(&t[i]);
 	}
 	writememimage(1, img);

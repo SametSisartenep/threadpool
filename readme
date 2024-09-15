@@ -9,3 +9,4 @@ Thread pool experiments.
 	- main5: channel-based memimage block raster task
 	- main6: main4 with counted task execution
 	- main7: main5 with counted task execution
+	- main8: main7 with user-defined task completion mgmt
